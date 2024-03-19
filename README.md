@@ -37,7 +37,7 @@
 5) fill your jitsi.env with your credentials and settings  
    NOTE: jitsi.env gets ignored by .gitignore  
    
-6) Create Your Setup File  
+6) __Create Your Setup File__ (cloud_config.yaml)
 
     - run setup.sh in your local environment  
       NOTE: this script fills the placeholder you set in your jitsi.env 
