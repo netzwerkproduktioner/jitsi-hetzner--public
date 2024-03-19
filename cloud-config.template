@@ -86,7 +86,7 @@ write_files:
       #
       CUSTOMIZATIONS_REPO={{CUSTOMIZATIONS_REPO}}
       APP_PATH={{APP_PATH}}
-      APP_NAME="{{APP_NAME}}"
+      APP_NAME={{APP_NAME}}
 
       JITSI_WATERMARK_LINK=https://{{SUBDOMAIN_DOMAIN_TLD}}
 
