@@ -68,10 +68,10 @@ mv -f ${APP_PATH}/custom-frontend/subdomain.domain.tld/ ${APP_PATH}/custom-front
 EXTERNAL_SERVICE_SECRET=$(sed -n 's/ \{0,\}external_service_secret = \"\(.*\)\"\;$/\1/p' /etc/prosody/conf.avail/${FQDN}.cfg.lua)
 
 # parse config files to destination  
-sed -e "s/{{SUBDOMAIN.DOMAIN.TLD}}/${FQDN}/g" \
--e "s/{{EXTERNAL_SERVICE_SECRET}}/${EXTERNAL_SERVICE_SECRET}/g" ${APP_PATH}/configs/domain.cfg.lua > /etc/prosody/conf.avail/${FQDN}.cfg.lua
+sed -e "s~{{SUBDOMAIN.DOMAIN.TLD}}~${FQDN}~g" \
+-e "s~{{EXTERNAL_SERVICE_SECRET}}~${EXTERNAL_SERVICE_SECRET}~g" ${APP_PATH}/configs/domain.cfg.lua > /etc/prosody/conf.avail/${FQDN}.cfg.lua
 
-sed "s/{{SUBDOMAIN.DOMAIN.TLD}}/${FQDN}/g" ${APP_PATH}/configs/domain-config.js > /etc/jitsi/meet/${FQDN}-config.js
+sed "s~{{SUBDOMAIN.DOMAIN.TLD}}~${FQDN}~g" ${APP_PATH}/configs/domain-config.js > /etc/jitsi/meet/${FQDN}-config.js
 
 # modifying jicofo.conf
 # extract the password
@@ -84,11 +84,11 @@ sed "s/{{SUBDOMAIN.DOMAIN.TLD}}/${FQDN}/g" ${APP_PATH}/configs/domain-config.js 
 # expected pattern in jicofo.conf: password: "<chars>" 
 JICOFO_PASSWORD=$(sed -n 's/ \{0,\}password: \"\(.*\)\"$/\1/p' /etc/jitsi/jicofo/jicofo.conf)
 
-sed -e "s/{{JICOFO_PASSWORD}}/${JICOFO_PASSWORD}/g" \
--e "s/{{SUBDOMAIN.DOMAIN.TLD}}/${FQDN}/g" ${APP_PATH}/configs/jicofo-template.conf > /etc/jitsi/jicofo/jicofo.conf
+sed -e "s~{{JICOFO_PASSWORD}}~${JICOFO_PASSWORD}~g" \
+-e "s~{{SUBDOMAIN.DOMAIN.TLD}}~${FQDN}~g" ${APP_PATH}/configs/jicofo-template.conf > /etc/jitsi/jicofo/jicofo.conf
 
-sed -e "s/{{APP_NAME}}/${APP_NAME}/g" \
--e "s/{{JITSI_WATERMARK_LINK}}/${JITSI_WATERMARK_LINK}/g" ${APP_PATH}/configs/interface_config-template.js > ${APP_PATH}/configs/interface_config.js
+sed -e "s~{{APP_NAME}}~${APP_NAME}~g" \
+-e "s~{{JITSI_WATERMARK_LINK}}~${JITSI_WATERMARK_LINK}~g" ${APP_PATH}/configs/interface_config-template.js > ${APP_PATH}/configs/interface_config.js
 rm ${APP_PATH}/configs/interface_config-template.js
 
 ln -sf ${APP_PATH}/configs/interface_config.js /usr/share/jitsi-meet/interface_config.js
@@ -126,7 +126,7 @@ for FILE in ${STATIC_FILES}
 do
     # replace domain-placeholder in current file  
     # NOTE: breaks in ZSH-shell!
-    CONTENT_REPLACEMENT=$(sed -e "s/{{FQDN}}/${FQDN}/g" /var/www/jitsi-meet/${FQDN}/static/${FILE})
+    CONTENT_REPLACEMENT=$(sed -e "s~{{FQDN}}~${FQDN}~g" /var/www/jitsi-meet/${FQDN}/static/${FILE})
     # temp file 
     # note: echo with double quotes to keep the line breaks..
     echo "${CONTENT_REPLACEMENT}" > /var/www/jitsi-meet/${FQDN}/static/${FILE}
@@ -136,11 +136,11 @@ done
 
 # replace placeholder in welcome page with your custom page
 # troubleshooting sed @see: https://www.gnu.org/software/sed/manual/html_node/Multiple-commands-syntax.html 
-sed -e "s/{{FQDN}}/${FQDN}/g" \
--e "s/{{NAME_LEGAL_NOTICE}}/${NAME_LEGAL_NOTICE}/g" \
--e "s/{{NAME_PRIVACY_POLICY}}/${NAME_PRIVACY_POLICY}/g" \
--e "s/{{FILENAME_LEGAL_NOTICE}}/${FILENAME_LEGAL_NOTICE}/g" \
--e "s/{{FILENAME_PRIVACY_POLICY}}/${FILENAME_PRIVACY_POLICY}/g" /var/www/jitsi-meet/${FQDN}/static/welcome.html > /var/www/jitsi-meet/${FQDN}/static/welcomePageAdditionalContent.html
+sed -e "s~{{FQDN}}~${FQDN}~g" \
+-e "s~{{NAME_LEGAL_NOTICE}}~${NAME_LEGAL_NOTICE}~g" \
+-e "s~{{NAME_PRIVACY_POLICY}}~${NAME_PRIVACY_POLICY}~g" \
+-e "s~{{FILENAME_LEGAL_NOTICE}}~${FILENAME_LEGAL_NOTICE}~g" \
+-e "s~{{FILENAME_PRIVACY_POLICY}}~${FILENAME_PRIVACY_POLICY}~g" /var/www/jitsi-meet/${FQDN}/static/welcome.html > /var/www/jitsi-meet/${FQDN}/static/welcomePageAdditionalContent.html
 
 rm /var/www/jitsi-meet/${FQDN}/static/welcome.html
 ln -sf /var/www/jitsi-meet/${FQDN}/static/welcomePageAdditionalContent.html /usr/share/jitsi-meet/static/welcomePageAdditionalContent.html
@@ -160,15 +160,15 @@ ln -sf /var/www/jitsi-meet/${FQDN}/static/css /usr/share/jitsi-meet/static/css
 ln -sf /var/www/jitsi-meet/${FQDN}/images/favicon.ico /usr/share/jitsi-meet/favicon.ico
 
 # renaming and parsing template html files to destination folder  
-sed -e "s/{{FILENAME_LEGAL_NOTICE}}/${FILENAME_LEGAL_NOTICE}/g" \
--e "s/{{NAME_LEGAL_NOTICE}}/${NAME_LEGAL_NOTICE}/g" \
--e "s/{{NAME_PRIVACY_POLICY}}/${NAME_PRIVACY_POLICY}/g" \
--e "s/{{FILENAME_PRIVACY_POLICY}}/${FILENAME_PRIVACY_POLICY}/g" /var/www/jitsi-meet/${FQDN}/static/legal-notice_de.html.template > /var/www/jitsi-meet/${FQDN}/static/${FILENAME_LEGAL_NOTICE}
+sed -e "s~{{FILENAME_LEGAL_NOTICE}}~${FILENAME_LEGAL_NOTICE}~g" \
+-e "s~{{NAME_LEGAL_NOTICE}}~${NAME_LEGAL_NOTICE}~g" \
+-e "s~{{NAME_PRIVACY_POLICY}}~${NAME_PRIVACY_POLICY}~g" \
+-e "s~{{FILENAME_PRIVACY_POLICY}}~${FILENAME_PRIVACY_POLICY}~g" /var/www/jitsi-meet/${FQDN}/static/legal-notice_de.html.template > /var/www/jitsi-meet/${FQDN}/static/${FILENAME_LEGAL_NOTICE}
 ln -sf /var/www/jitsi-meet/${FQDN}/static/${FILENAME_LEGAL_NOTICE} /usr/share/jitsi-meet/static/${FILENAME_LEGAL_NOTICE}
 rm /var/www/jitsi-meet/${FQDN}/static/legal-notice_de.html.template
 
-sed -e "s/{{FILENAME_PRIVACY_POLICY}}/${FILENAME_PRIVACY_POLICY}/g" \
--e "s/{{NAME_PRIVACY_POLICY}}/${NAME_PRIVACY_POLICY}/g" /var/www/jitsi-meet/${FQDN}/static/privacy-policy-jitsi_de.html.template > /var/www/jitsi-meet/${FQDN}/static/${FILENAME_PRIVACY_POLICY}
+sed -e "s~{{FILENAME_PRIVACY_POLICY}}~${FILENAME_PRIVACY_POLICY}~g" \
+-e "s~{{NAME_PRIVACY_POLICY}}~${NAME_PRIVACY_POLICY}~g" /var/www/jitsi-meet/${FQDN}/static/privacy-policy-jitsi_de.html.template > /var/www/jitsi-meet/${FQDN}/static/${FILENAME_PRIVACY_POLICY}
 ln -sf /var/www/jitsi-meet/${FQDN}/static/${FILENAME_PRIVACY_POLICY} /usr/share/jitsi-meet/static/${FILENAME_PRIVACY_POLICY}
 
 #################
