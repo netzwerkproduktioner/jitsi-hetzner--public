@@ -70,3 +70,7 @@
 
 
         ![Manual](./docs/howto_setup-jitsi-cli.gif "How to setup Jitsi on Hetzner.")
+
+9) Further maintenance  
+   After successfully run the setup you won't be able to login as root again.  
+   Use your jitsi-user (defined in your cloud-config.yaml).  
