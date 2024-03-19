@@ -1,0 +1,159 @@
+#cloud-config
+users:
+  - name: {{JITSI_USER}} # defaults to username 'jitsi'
+    groups: users, admin, docker
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - {{USER_PUBLIC_KEY}}
+
+packages:
+  - ufw
+  - fail2ban
+  - nano
+
+package_update: true
+package_upgrade: true    
+
+write_files:
+  # register all your subdomains in this file.
+  # be aware that you setup nginx config files too.
+  - path: /var/lib/acme/domains.txt
+    content: |
+      {{SUBDOMAIN_DOMAIN_TLD}}
+    apppend: true
+    defer: true
+
+  # initial params (avoids nginx errors)
+  - path: /var/lib/acme/dhparam/dhparam.pem
+    # openssl dhparam -out /path/to/file/dhparam-strong.pem 4096 
+    content: |
+      -----BEGIN DH PARAMETERS-----
+      MIICCAKCAgEA6jFqREXnAyvzBwe8ZjpeE0uXHO2GbiOl2IzU2KRDTMeQuA7yUn7R
+      h3l+ysPvTkM8557YngwVQtjKnWFVTkvtWu7y6OiJmdn+B8FMPfSk5CjOo68IiMEP
+      rBKklt7tEgX/tmSoirAEB5iyiWjg8vvQU7eOg1RCXCM/E9O4cpbugigOTxcDOLPx
+      P+JMdwsSa5/mUFuJCa6El5lWbNQHBGgeHZkqjvCzZjJE9+mAj+0g6iMwKiahy4vj
+      8akdAjLAI6wxE/yPbdZVgm/IVYAvG7RFpIY85ylGuB9H20vAjcUVIupHZG2G71BE
+      KFmVTGxhUFQflOMfiE6mxrcI1MNpTE3GDdwxokd2hPTN2ygYuvTTFX4Efjir2/9e
+      uCHm2VXbucWvHJPEFRFo+dupW3xlsMIWWX8FzJaRaUNnu5RuMGixVapg/sEsGSVS
+      AVvjMWkXd9pcIGOnVs4yvxXx/BgdyiyjlALiMrwythFnIF92MwvbKgXIlIZSuxwF
+      CfwW8Fue5pxM7cBBBH4tEVOptHrVHZ3TBuBjL7i7pzgumm56DpmiZbEcTa3JRS9j
+      Q19PtdrGVLlru6RqZJ+a6XRWzNT1hKtPL8v4JnregiuIdD0hCJ8kfcZIZiqW5EPL
+      yityD2Ce1CsBW1ZivghEJcwpgFIVJYl+Zjlu2k1+AwlzVa1kU02BXTsCAQI=
+      -----END DH PARAMETERS-----
+    defer: true
+
+  # your env with credentials and individual settings (consumed by helpers)
+  - path: {{APP_PATH}}/.env
+    content: |
+      # Prosody handles the authentification at jitsi. 
+      # The Prosody user can open the room and administrate 
+      # the conference
+      PROSODY_USER={{PROSODY_USER}}
+      PROSODY_PASS={{PROSODY_PASS}}
+
+      # Your mail address used to register at certbot
+      # for your Let's Encrypt Certificate. 
+      # @see: https://certbot.eff.org/ 
+      CERT_MAILADDRESS={{CERT_MAILADDRESS}}
+
+      # secrets set in jitsi config files  
+      JICOFO_PASSWORD={{JICOFO_PASSWORD}}
+      EXTERNAL_SERVICE_SECRET={{EXTERNAL_SERVICE_SECRET}}
+
+      # Shortcut for setting the fully qualified domain name
+      # Notice: If JITSI_FQDN is set, the single vars for the
+      # domain parts (subdomain, domain, tld) are ignored. 
+      SUBDOMAIN_DOMAIN_TLD={{SUBDOMAIN_DOMAIN_TLD}}
+
+      # path depending to your repositories structure 
+      # - expects /opt as existing directory on your system
+      # - expects repo structure (your public repo):
+      # +-- ./
+      # |   +-- apps
+      # |   |   +-- jitsi-meet 
+      # |   |   |   +-- configs
+      # |   |   |   +-- custom-frontend
+      # |   |   |   |   +-- subdomain.domain.tld (folder) 
+      # |   |   |   |   |   +-- css
+      # |   |   |   |   |   +-- images
+      # |   |   |   |   |   +-- static
+      # |   |   |   |   |   |   +-- privacy-policy-jitsi_de.html
+      # |   |   |   |   |   |   +-- welcome.html
+      # |   |   |   |   |   |   +-- close3.html
+      # |   |   |   +-- helper
+      # |   +-- <other files/folders>
+      #
+      CUSTOMIZATIONS_REPO={{CUSTOMIZATIONS_REPO}}
+      APP_PATH={{APP_PATH}}
+      APP_NAME="{{APP_NAME}}"
+
+      JITSI_WATERMARK_LINK=https://{{SUBDOMAIN_DOMAIN_TLD}}
+
+      # use your custom filenames and extensions for legal files  
+      # set also the names of the links
+      NAME_LEGAL_NOTICE={{NAME_LEGAL_NOTICE}}
+      
+      # filename with extension! (i.e. '.html')
+      FILENAME_LEGAL_NOTICE={{FILENAME_LEGAL_NOTICE}}
+
+      NAME_PRIVACY_POLICY={{NAME_PRIVACY_POLICY}}
+      
+      # filename with extension! (i.e. '.html')
+      FILENAME_PRIVACY_POLICY={{FILENAME_PRIVACY_POLICY}}
+
+      # ssh hardening (secret paramater)  
+      SSH_PORT={{SSH_PORT}}
+      SSH_USERS="{{JITSI_USER}}"
+      SSH_MAX_AUTHTRIES=3
+
+    defer: true
+
+runcmd:
+    # set vars  
+    - CUSTOMIZATIONS_REPO={{CUSTOMIZATIONS_REPO}}
+    - APP_PATH={{APP_PATH}}
+    # configure firewall
+    - [ ufw, default, deny, incoming ]
+    - [ ufw, default, allow, outgoing ]
+    # the default ssh port can be omitted  
+    # - [ ufw, allow, ssh ]
+    - [ ufw, allow, http ]
+    - [ ufw, allow, https ]
+    - [ ufw, allow, 'Nginx HTTP']
+    - [ ufw, allow, 'Nginx Full']
+    # the port 33322 is the 'secret' ssh port
+    - [ ufw, allow, 33322/tcp ]
+    # the standard port 22 is closed automatically after running the setup successfully 
+    - [ ufw, allow, 22/tcp ]
+    # jitsi: For General Network Audio/Video Meetings.
+    - [ ufw, allow, 10000/udp ]
+    # jitsi: For querying the stun server (coturn, optional, needs config.js change to enable it).
+    - [ ufw, allow, 3478/udp ]
+    # jitsi: For fallback network video/audio communications over TCP (when UDP is blocked for example), served by coturn. 
+    - [ ufw, allow, 5349/tcp ]
+    - [ ufw, enable ]
+    # set timezone
+    - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+    - dpkg-reconfigure --frontend noninteractive tzdata
+    # set default shell to bash
+    # (debian/ubuntu uses bash for interactive shell and dash for sh-scripts!)
+    - echo "dash dash/sh boolean false" | debconf-set-selections
+    - DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+    # configure fail2ban
+    # @see: https://wiki.ubuntuusers.de/fail2ban/, 
+    # @see: https://community.hetzner.com/tutorials/securing-ssh#step-2---setup-of-fail2ban)
+    - printf "[sshd]\nenabled = true\nbanaction = iptables-multiport\n" > /etc/fail2ban/jail.local
+    - printf "[default]\nbantime = 259200\nmaxretry = 3" >> /etc/fail2ban/jail.local
+    - systemctl enable fail2ban
+    # create fresh dhparams
+    - openssl dhparam -out /var/lib/acme/dhparam/dhparam-strong.pem 2048
+    - mv -f /var/lib/acme/dhparam/dhparam-strong.pem /var/lib/acme/dhparam/dhparam.pem
+    - service nginx reload && service nginx restart
+    # get configs and templates from repo  
+    - TEMP_FOLDER_MD5=$(echo ${RANDOM} | md5sum | awk '{print $1}')
+    - git clone ${CUSTOMIZATIONS_REPO} /opt/apps/${TEMP_FOLDER_MD5}/repo
+    - mkdir -p ${APP_PATH}
+    - mv -f /opt/apps/${TEMP_FOLDER_MD5}/repo/apps/jitsi-meet/* ${APP_PATH}/
+    - rm -R /opt/apps/${TEMP_FOLDER_MD5}
+    - chmod +x ${APP_PATH}/helper/customize-jitsi.sh

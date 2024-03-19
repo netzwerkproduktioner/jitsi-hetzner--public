@@ -1,0 +1,25 @@
+<html lang="de">  
+<head>  
+    <style>
+        body {
+            height: 100vh;
+            background-image: url("../images/waving-hand.svg");
+            background-position: 50% 50%;
+            background-repeat: no-repeat;
+            background-size: 40%;
+        }
+    </style>
+    <meta charset="utf-8">  
+    <title>Jitsi Meet</title>  
+</head>  
+<body>
+    <script>  
+        // clears browser storage to max. GDPR compliance
+        localStorage.clear();  
+        sessionStorage.clear();
+        setTimeout(() => {
+            window.location = "https://{{FQDN}}";
+        }, 1400);
+    </script>  
+</body>  
+</html> 
