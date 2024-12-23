@@ -7,7 +7,7 @@
 
 2) __Clone this repo__ and create your own copy/repo of it
    NOTE: You need a public repo 
-   The customization script (customize-jitsi.sh) relies repository structure as follows.  
+   The customization script (customize-jitsi.sh) relies on repository structure as follows.  
 
         +-- ./
         |   +-- apps
